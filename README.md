@@ -1,1 +1,1 @@
-# Cheats
+# SniperArenaV6.lua
