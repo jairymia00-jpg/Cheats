@@ -485,4 +485,70 @@ table.insert(connections,
     end)
 )
 
+-- SKELETON ESP | R15 CHARACTERS
+local skeletons = {}
+
+local bones = {
+    {"Head", "UpperTorso"},
+    {"UpperTorso", "LowerTorso"},
+    {"UpperTorso", "LeftUpperArm"},
+    {"LeftUpperArm", "LeftLowerArm"},
+    {"LeftLowerArm", "LeftHand"},
+    {"UpperTorso", "RightUpperArm"},
+    {"RightUpperArm", "RightLowerArm"},
+    {"RightLowerArm", "RightHand"},
+    {"LowerTorso", "LeftUpperLeg"},
+    {"LeftUpperLeg", "LeftLowerLeg"},
+    {"LeftLowerLeg", "LeftFoot"},
+    {"LowerTorso", "RightUpperLeg"},
+    {"RightUpperLeg", "RightLowerLeg"},
+    {"RightLowerLeg", "RightFoot"}
+}
+
+local targetPart = "Head"
+
+local function drawSkeleton(player, camera)
+    local character = player.Character
+    if not character then return end
+
+    if not skeletons[player] then
+        skeletons[player] = {}
+
+        for i = 1, #bones do
+            local line = Instance.new("Frame")
+            line.AnchorPoint = Vector2.new(0, .5)
+            line.BackgroundColor3 = Color3.fromRGB(175, 115, 255)
+            line.BorderSizePixel = 0
+            line.Visible = false
+            line.Parent = gui
+
+            skeletons[player][i] = line
+        end
+    end
+
+    for i, pair in ipairs(bones) do
+        local line = skeletons[player][i]
+        local a = character:FindFirstChild(pair[1])
+        local b = character:FindFirstChild(pair[2])
+
+        line.Visible = false
+
+        if a and b then
+            local p1, v1 = camera:WorldToViewportPoint(a.Position)
+            local p2, v2 = camera:WorldToViewportPoint(b.Position)
+
+            if v1 and v2 and p1.Z > 0 and p2.Z > 0 then
+                local start = Vector2.new(p1.X, p1.Y)
+                local finish = Vector2.new(p2.X, p2.Y)
+                local delta = finish - start
+
+                line.Position = UDim2.fromOffset(start.X, start.Y)
+                line.Size = UDim2.fromOffset(delta.Magnitude, 2)
+                line.Rotation = math.deg(math.atan2(delta.Y, delta.X))
+                line.Visible = true
+            end
+        end
+    end
+end
+
 print("JAILBIRD V2 LOADED SUCCESSFULLY")
