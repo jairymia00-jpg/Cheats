@@ -1,93 +1,106 @@
 
--- JAILBIRD V1 | PURPLE VISUAL SYSTEM
--- Place in StarterPlayer > StarterPlayerScripts
--- LocalScript for your own Roblox Studio experience
+-- JAILBIRD V2 | PURPLE ESP SYSTEM
+-- LocalScript: StarterPlayer > StarterPlayerScripts
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local Input = game:GetService("UserInputService")
+local UIS = game:GetService("UserInputService")
 
 local Me = Players.LocalPlayer
-local PlayerGui = Me:WaitForChild("PlayerGui")
+local PG = Me:WaitForChild("PlayerGui")
 
-if _G.JailbirdV1Stop then
-    _G.JailbirdV1Stop()
+if _G.JailbirdV2Stop then
+    _G.JailbirdV2Stop()
 end
 
-local settings = {
-    ESP = true,
+local S = {
+    Enabled = true,
+    Boxes = true,
     Names = true,
+    Health = true,
     Distance = true,
-    FOV = true,
     Tracers = true,
+    FOV = true,
     TeamCheck = true,
-    Radius = 160
+    Radius = 160,
+    Thickness = 2
 }
 
+local purple = Color3.fromRGB(165, 110, 255)
+local white = Color3.fromRGB(245, 245, 255)
+local dark = Color3.fromRGB(17, 17, 29)
+local panelColor = Color3.fromRGB(35, 32, 55)
+
 local connections = {}
-local markers = {}
+local visuals = {}
 
-local purple = Color3.fromRGB(155, 100, 255)
-local dark = Color3.fromRGB(17, 18, 30)
-local buttonColor = Color3.fromRGB(40, 36, 65)
-
-local function create(class, parent, props)
+local function new(class, parent, props)
     local obj = Instance.new(class)
-    for key, value in pairs(props or {}) do
-        obj[key] = value
+    for k, v in pairs(props or {}) do
+        obj[k] = v
     end
     obj.Parent = parent
     return obj
 end
 
-local gui = create("ScreenGui", PlayerGui, {
-    Name = "JailbirdV1",
+local gui = new("ScreenGui", PG, {
+    Name = "JailbirdV2",
     ResetOnSpawn = false,
     IgnoreGuiInset = true,
     DisplayOrder = 999
 })
 
-local panel = create("Frame", gui, {
-    Size = UDim2.fromOffset(280, 390),
-    Position = UDim2.fromOffset(25, 110),
+local panel = new("Frame", gui, {
+    Size = UDim2.fromOffset(290, 425),
+    Position = UDim2.fromOffset(35, 110),
     BackgroundColor3 = dark,
     BorderSizePixel = 0,
     Active = true,
     Draggable = true
 })
 
-create("UICorner", panel, {
+new("UICorner", panel, {
     CornerRadius = UDim.new(0, 12)
 })
 
-create("UIStroke", panel, {
+new("UIStroke", panel, {
     Color = purple,
     Thickness = 2
 })
 
-create("TextLabel", panel, {
+new("TextLabel", panel, {
     Size = UDim2.new(1, 0, 0, 48),
     BackgroundTransparency = 1,
-    Text = "JAILBIRD  |  V1",
+    Text = "JAILBIRD  V2",
     TextColor3 = purple,
     Font = Enum.Font.GothamBold,
-    TextSize = 20
+    TextSize = 21
+})
+
+new("TextLabel", panel, {
+    Size = UDim2.new(1, 0, 0, 18),
+    Position = UDim2.fromOffset(0, 42),
+    BackgroundTransparency = 1,
+    Text = "VISUAL CONTROL SYSTEM",
+    TextColor3 = Color3.fromRGB(145, 140, 170),
+    Font = Enum.Font.Gotham,
+    TextSize = 10
 })
 
 local function button(text, y, callback)
-    local b = create("TextButton", panel, {
-        Size = UDim2.new(1, -24, 0, 38),
+    local b = new("TextButton", panel, {
+        Size = UDim2.new(1, -24, 0, 33),
         Position = UDim2.fromOffset(12, y),
-        BackgroundColor3 = buttonColor,
+        BackgroundColor3 = panelColor,
         BorderSizePixel = 0,
         Text = text,
-        TextColor3 = Color3.new(1, 1, 1),
+        TextColor3 = white,
         Font = Enum.Font.GothamBold,
-        TextSize = 13
+        TextSize = 12
     })
 
-    create("UICorner", b, {
-        CornerRadius = UDim.new(0, 8)
+    new("UICorner", b, {
+        CornerRadius = UDim.new(0, 7)
     })
 
     b.MouseButton1Click:Connect(function()
@@ -97,162 +110,252 @@ local function button(text, y, callback)
     return b
 end
 
-local function toggle(key, label, y)
-    button(label .. ": ON", y, function(b)
-        settings[key] = not settings[key]
-        b.Text = label .. ": " ..
-            (settings[key] and "ON" or "OFF")
+local function toggle(key, title, y)
+    button(title .. ": ON", y, function(b)
+        S[key] = not S[key]
+        b.Text = title .. ": " ..
+            (S[key] and "ON" or "OFF")
     end)
 end
 
-toggle("ESP", "PLAYER ESP", 55)
-toggle("Names", "PLAYER NAMES", 100)
-toggle("Distance", "DISTANCE", 145)
-toggle("FOV", "FOV CIRCLE", 190)
-toggle("Tracers", "TARGET LINES", 235)
-toggle("TeamCheck", "TEAM CHECK", 280)
+toggle("Enabled", "MASTER ESP", 68)
+toggle("Boxes", "2D BOXES", 107)
+toggle("Names", "PLAYER NAMES", 146)
+toggle("Health", "HEALTH BARS", 185)
+toggle("Tracers", "TARGET LINES", 224)
+toggle("FOV", "FOV CIRCLE", 263)
+toggle("TeamCheck", "TEAM FILTER", 302)
 
-button("FOV SIZE: 160", 325, function(b)
-    settings.Radius += 20
-
-    if settings.Radius > 300 then
-        settings.Radius = 80
+button("FOV RADIUS: 160", 341, function(b)
+    S.Radius += 20
+    if S.Radius > 300 then
+        S.Radius = 80
     end
-
-    b.Text = "FOV SIZE: " .. settings.Radius
+    b.Text = "FOV RADIUS: " .. S.Radius
 end)
 
-local circle = create("Frame", gui, {
-    AnchorPoint = Vector2.new(.5, .5),
-    BackgroundTransparency = 1
+local circle = new("Frame", gui, {
+    BackgroundTransparency = 1,
+    AnchorPoint = Vector2.new(.5, .5)
 })
 
-create("UICorner", circle, {
+new("UICorner", circle, {
     CornerRadius = UDim.new(1, 0)
 })
 
-create("UIStroke", circle, {
+new("UIStroke", circle, {
     Color = purple,
     Thickness = 2
 })
 
-local line = create("Frame", gui, {
+local tracer = new("Frame", gui, {
     AnchorPoint = Vector2.new(0, .5),
     BackgroundColor3 = purple,
     BorderSizePixel = 0,
     Visible = false
 })
 
-local dot = create("Frame", gui, {
-    Size = UDim2.fromOffset(10, 10),
+local targetDot = new("Frame", gui, {
+    Size = UDim2.fromOffset(9, 9),
     AnchorPoint = Vector2.new(.5, .5),
-    BackgroundColor3 = Color3.fromRGB(255, 100, 130),
+    BackgroundColor3 = Color3.fromRGB(255, 95, 125),
     BorderSizePixel = 0,
     Visible = false
 })
 
-create("UICorner", dot, {
+new("UICorner", targetDot, {
     CornerRadius = UDim.new(1, 0)
 })
 
 local function eligible(player)
-    if player == Me then return false end
+    if player == Me then
+        return false
+    end
 
-    if settings.TeamCheck and Me.Team and player.Team then
+    if S.TeamCheck and Me.Team and player.Team then
         return Me.Team ~= player.Team
     end
 
     return true
 end
 
-local function remove(player)
-    local data = markers[player]
-    if not data then return end
+local function createVisual(player)
+    local root = new("Frame", gui, {
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        Visible = false
+    })
 
-    data.highlight:Destroy()
-    data.tag:Destroy()
-    markers[player] = nil
+    local box = new("Frame", root, {
+        Size = UDim2.fromScale(1, 1),
+        BackgroundTransparency = 1
+    })
+
+    local stroke = new("UIStroke", box, {
+        Color = purple,
+        Thickness = S.Thickness
+    })
+
+    local name = new("TextLabel", root, {
+        Size = UDim2.new(1, 50, 0, 20),
+        Position = UDim2.new(0, -25, 0, -23),
+        BackgroundTransparency = 1,
+        TextColor3 = white,
+        TextStrokeTransparency = .25,
+        Font = Enum.Font.GothamBold,
+        TextSize = 12
+    })
+
+    local healthBG = new("Frame", root, {
+        Size = UDim2.new(0, 5, 1, 0),
+        Position = UDim2.fromOffset(-10, 0),
+        BackgroundColor3 = Color3.fromRGB(60, 25, 30),
+        BorderSizePixel = 0
+    })
+
+    local healthFill = new("Frame", healthBG, {
+        AnchorPoint = Vector2.new(0, 1),
+        Position = UDim2.fromScale(0, 1),
+        Size = UDim2.fromScale(1, 1),
+        BackgroundColor3 = Color3.fromRGB(75, 255, 140),
+        BorderSizePixel = 0
+    })
+
+    visuals[player] = {
+        Root = root,
+        Box = box,
+        Stroke = stroke,
+        Name = name,
+        HealthBG = healthBG,
+        HealthFill = healthFill
+    }
+
+    return visuals[player]
 end
 
-local function updateESP()
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= Me then
-            local character = player.Character
-            local head = character and character:FindFirstChild("Head")
-            local humanoid = character and
-                character:FindFirstChildOfClass("Humanoid")
+local function removeVisual(player)
+    local data = visuals[player]
+    if data then
+        data.Root:Destroy()
+        visuals[player] = nil
+    end
+end
 
-            local data = markers[player]
+local function screenBounds(character, camera)
+    local cf, size = character:GetBoundingBox()
 
-            if data and data.character ~= character then
-                remove(player)
-                data = nil
-            end
+    local minX, minY = math.huge, math.huge
+    local maxX, maxY = -math.huge, -math.huge
 
-            if not settings.ESP or not eligible(player)
-                or not head or not humanoid
-                or humanoid.Health <= 0 then
+    local half = size * .5
 
-                remove(player)
-            else
-                if not data then
-                    local highlight = create("Highlight", character, {
-                        Adornee = character,
-                        DepthMode = Enum.HighlightDepthMode.AlwaysOnTop,
-                        FillTransparency = .7,
-                        OutlineTransparency = 0
-                    })
+    for x = -1, 1, 2 do
+        for y = -1, 1, 2 do
+            for z = -1, 1, 2 do
+                local corner = cf:PointToWorldSpace(
+                    Vector3.new(
+                        half.X * x,
+                        half.Y * y,
+                        half.Z * z
+                    )
+                )
 
-                    local tag = create("BillboardGui", head, {
-                        Adornee = head,
-                        Size = UDim2.fromOffset(180, 42),
-                        StudsOffset = Vector3.new(0, 2.5, 0),
-                        AlwaysOnTop = true
-                    })
+                local point = camera:WorldToViewportPoint(corner)
 
-                    local text = create("TextLabel", tag, {
-                        Size = UDim2.fromScale(1, 1),
-                        BackgroundTransparency = 1,
-                        TextColor3 = Color3.new(1, 1, 1),
-                        TextStrokeTransparency = .2,
-                        Font = Enum.Font.GothamBold,
-                        TextSize = 13
-                    })
-
-                    data = {
-                        character = character,
-                        highlight = highlight,
-                        tag = tag,
-                        text = text
-                    }
-
-                    markers[player] = data
+                if point.Z <= 0 then
+                    return nil
                 end
 
-                local color = player.Team
-                    and player.TeamColor.Color or purple
-
-                data.highlight.FillColor = color
-                data.highlight.OutlineColor = color
-                data.tag.Enabled = settings.Names
-
-                local root = Me.Character and
-                    Me.Character:FindFirstChild("HumanoidRootPart")
-
-                local distance = root and
-                    math.floor((root.Position - head.Position).Magnitude)
-                    or 0
-
-                local label = player.DisplayName
-
-                if settings.Distance then
-                    label ..= " | " .. distance .. " studs"
-                end
-
-                data.text.Text = label
+                minX = math.min(minX, point.X)
+                minY = math.min(minY, point.Y)
+                maxX = math.max(maxX, point.X)
+                maxY = math.max(maxY, point.Y)
             end
         end
     end
+
+    return minX, minY, maxX, maxY
+end
+
+local function updatePlayer(player, camera)
+    if not S.Enabled or not eligible(player) then
+        if visuals[player] then
+            visuals[player].Root.Visible = false
+        end
+        return
+    end
+
+    local character = player.Character
+    local head = character and character:FindFirstChild("Head")
+    local humanoid = character and
+        character:FindFirstChildOfClass("Humanoid")
+
+    if not head or not humanoid or humanoid.Health <= 0 then
+        if visuals[player] then
+            visuals[player].Root.Visible = false
+        end
+        return
+    end
+
+    local minX, minY, maxX, maxY =
+        screenBounds(character, camera)
+
+    local data = visuals[player] or createVisual(player)
+
+    if not minX then
+        data.Root.Visible = false
+        return
+    end
+
+    local width = maxX - minX
+    local height = maxY - minY
+
+    if width <= 0 or height <= 0 then
+        data.Root.Visible = false
+        return
+    end
+
+    data.Root.Visible = true
+    data.Root.Position = UDim2.fromOffset(minX, minY)
+    data.Root.Size = UDim2.fromOffset(width, height)
+
+    data.Box.Visible = S.Boxes
+    data.Name.Visible = S.Names
+    data.HealthBG.Visible = S.Health
+
+    local color = player.Team
+        and player.TeamColor.Color
+        or purple
+
+    data.Stroke.Color = color
+
+    local myRoot = Me.Character and
+        Me.Character:FindFirstChild("HumanoidRootPart")
+
+    local distance = myRoot and
+        math.floor((myRoot.Position - head.Position).Magnitude)
+        or 0
+
+    data.Name.Text = player.DisplayName
+
+    if S.Distance then
+        data.Name.Text ..= " | " .. distance .. "m"
+    end
+
+    local ratio = math.clamp(
+        humanoid.Health / math.max(humanoid.MaxHealth, 1),
+        0,
+        1
+    )
+
+    data.HealthFill.Size = UDim2.fromScale(1, ratio)
+
+    data.HealthFill.BackgroundColor3 =
+        Color3.fromRGB(
+            math.floor(255 * (1 - ratio)),
+            math.floor(255 * ratio),
+            75
+        )
 end
 
 local function cleanup()
@@ -260,29 +363,27 @@ local function cleanup()
         connection:Disconnect()
     end
 
-    local list = {}
-
-    for player in pairs(markers) do
-        table.insert(list, player)
-    end
-
-    for _, player in ipairs(list) do
-        remove(player)
+    for player in pairs(visuals) do
+        removeVisual(player)
     end
 
     gui:Destroy()
-    _G.JailbirdV1Stop = nil
+    _G.JailbirdV2Stop = nil
 end
 
-_G.JailbirdV1Stop = cleanup
+_G.JailbirdV2Stop = cleanup
+
+button("REMOVE JAILBIRD V2", 380, function()
+    cleanup()
+end)
 
 table.insert(connections,
-    Players.PlayerRemoving:Connect(remove)
+    Players.PlayerRemoving:Connect(removeVisual)
 )
 
 table.insert(connections,
-    Input.InputBegan:Connect(function(key, processed)
-        if not processed and key.KeyCode == Enum.KeyCode.F1 then
+    UIS.InputBegan:Connect(function(input, processed)
+        if not processed and input.KeyCode == Enum.KeyCode.F1 then
             panel.Visible = not panel.Visible
         end
     end)
@@ -295,83 +396,93 @@ table.insert(connections,
         local camera = workspace.CurrentCamera
         if not camera then return end
 
-        elapsed += dt
-
-        if elapsed >= .2 then
-            elapsed = 0
-            updateESP()
-        end
-
-        local mouse = Input:GetMouseLocation()
+        local mouse = UIS:GetMouseLocation()
 
         circle.Position = UDim2.fromOffset(mouse.X, mouse.Y)
         circle.Size = UDim2.fromOffset(
-            settings.Radius * 2,
-            settings.Radius * 2
+            S.Radius * 2,
+            S.Radius * 2
         )
-        circle.Visible = settings.FOV
 
-        local bestHead = nil
-        local bestDistance = settings.Radius
+        circle.Visible = S.Enabled and S.FOV
 
-        for _, player in ipairs(Players:GetPlayers()) do
-            if eligible(player) then
-                local character = player.Character
-                local head = character and
-                    character:FindFirstChild("Head")
+        elapsed += dt
 
-                local humanoid = character and
-                    character:FindFirstChildOfClass("Humanoid")
+        if elapsed >= .05 then
+            elapsed = 0
 
-                if head and humanoid and humanoid.Health > 0 then
-                    local point, visible =
-                        camera:WorldToViewportPoint(head.Position)
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= Me then
+                    updatePlayer(player, camera)
+                end
+            end
+        end
 
-                    if visible and point.Z > 0 then
-                        local distance = (
-                            Vector2.new(point.X, point.Y) - mouse
-                        ).Magnitude
+        local closest = nil
+        local closestDistance = S.Radius
 
-                        if distance < bestDistance then
-                            bestDistance = distance
-                            bestHead = head
+        if S.Enabled then
+            for _, player in ipairs(Players:GetPlayers()) do
+                if eligible(player) then
+                    local character = player.Character
+                    local head = character and
+                        character:FindFirstChild("Head")
+
+                    local humanoid = character and
+                        character:FindFirstChildOfClass("Humanoid")
+
+                    if head and humanoid and humanoid.Health > 0 then
+                        local point, visible =
+                            camera:WorldToViewportPoint(head.Position)
+
+                        if visible and point.Z > 0 then
+                            local position = Vector2.new(
+                                point.X,
+                                point.Y
+                            )
+
+                            local distance =
+                                (position - mouse).Magnitude
+
+                            if distance < closestDistance then
+                                closestDistance = distance
+                                closest = position
+                            end
                         end
                     end
                 end
             end
         end
 
-        line.Visible = settings.Tracers and bestHead ~= nil
-        dot.Visible = bestHead ~= nil
+        tracer.Visible =
+            S.Enabled and S.Tracers and closest ~= nil
 
-        if bestHead then
-            local point =
-                camera:WorldToViewportPoint(bestHead.Position)
+        targetDot.Visible =
+            S.Enabled and closest ~= nil
 
-            local destination = Vector2.new(point.X, point.Y)
-            local delta = destination - mouse
+        if closest then
+            local delta = closest - mouse
 
-            dot.Position = UDim2.fromOffset(
-                destination.X,
-                destination.Y
+            targetDot.Position = UDim2.fromOffset(
+                closest.X,
+                closest.Y
             )
 
-            line.Position = UDim2.fromOffset(
+            tracer.Position = UDim2.fromOffset(
                 mouse.X,
                 mouse.Y
             )
 
-            line.Size = UDim2.fromOffset(
+            tracer.Size = UDim2.fromOffset(
                 delta.Magnitude,
                 2
             )
 
-            line.Rotation = math.deg(
+            tracer.Rotation = math.deg(
                 math.atan2(delta.Y, delta.X)
             )
         end
     end)
 )
 
-updateESP()
-print("JAILBIRD V1 LOADED")
+print("JAILBIRD V2 LOADED SUCCESSFULLY")
